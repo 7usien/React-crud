@@ -1,17 +1,81 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
+
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import RootLayout from './pages/RootLayout';
+import { Errorpage } from './pages/Errorpage';
+import { PostsList } from './components/PostsList';
+
+import { Provider } from 'react-redux';
+import store from './state';
+import Index from './pages/Index';
 import App from './App';
-import reportWebVitals from './reportWebVitals';
+
+//splice code or lazy loading
+const Add = React.lazy(() => import('./pages/Add'));
+const Details = React.lazy(() => import('./pages/Details'));
+const Edit = React.lazy(() => import('./pages/Edit'));
+
+const paramsHandler = ({ params }) => {
+ if (isNaN(params.id)) {
+  throw new Response('Bad Request', {
+   statusText: 'please enter integer ID',
+   status: 400,
+  });
+ }
+};
+
+const router = createBrowserRouter([
+ {
+  path: '/',
+  element: <RootLayout />,
+  errorElement: <Errorpage />,
+  children: [
+   {
+    index: true,
+    element: <Index />,
+   },
+   {
+    path: 'post/',
+    element: <PostsList />,
+   },
+
+   {
+    path: 'post/add',
+    element: (
+     <Suspense fallback={<div>wait loading ...</div>}>
+      <Add />
+     </Suspense>
+    ),
+   },
+   {
+    path: 'post/:id/edit',
+    loader: paramsHandler,
+    element: (
+     <Suspense fallback={<div>wait loading ...</div>}>
+      <Edit />
+     </Suspense>
+    ),
+   },
+   {
+    path: 'post/:id',
+    loader: paramsHandler,
+    element: (
+     <Suspense fallback={<div>wait loading ...</div>}>
+      <Details />
+     </Suspense>
+    ),
+   },
+  ],
+ },
+]);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
+ <Provider store={store}>
+  <RouterProvider router={router}>
+   <App />
+  </RouterProvider>
+ </Provider>
 );
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
