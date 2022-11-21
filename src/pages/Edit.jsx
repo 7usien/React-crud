@@ -26,8 +26,8 @@ const Edit = () => {
  console.log(record);
  const formik = useFormik({
   initialValues: {
-   title: record?.title,
-   desc: record?.desc,
+   title: record ? record?.title : '',
+   desc: record ? record?.desc : '',
 
    onSubmit: (values) => {
     dispatch(
